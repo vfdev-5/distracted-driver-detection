@@ -16,20 +16,30 @@ import pandas as pd
 # DEFINE GLOBAL TRAINING PARAMETERS
 ###########################################################################
 
-master_submission = "results/submission_2016-06-09-14-11__10_1750_150_8.csv"
+# master_submission = "results/submission_2016-06-08-18-01__10_1500_100_8.csv"
+master_submission = "results/submission_2016-06-08-18-01__10_1500_100_8.csv"
 
 # test identical
-# slave_submission = "results/submission_2016-06-09-14-11__10_1750_150_8.csv"
-# No predictions by master/slave 54476 54476
+# slave_submission = "results/submission_2016-06-08-18-01__10_1500_100_8.csv"
+# Submissions are identical
+# Number of identical predictions 20548
+# New prediction from slave submission 0
+# Lost prediction by slave submission 0
+# Prediction precision improvement by slave submission 0
+# Prediction precision decrease by slave submission 0
+# Bad prediction by slave submission 0
+# No predictions by master/slave 59178 59178
+# Check :  79726 79726
 
 slave_submission = "results/submission_2016-06-09-09-40__10_-10_100_8.csv"
-# Number of identical predictions 35092
-# New prediction from slave submission 0
-# Lost prediction by slave submission 9061
-# Prediction precision improvement by slave submission 0
-# Prediction precision decrease by slave submission 1496
-# Bad prediction by slave submission 0
-# No predictions by master/slave 54476 41771
+# Number of identical predictions 6032
+# New prediction from slave submission 22761
+# Lost prediction by slave submission 5354
+# Prediction precision improvement by slave submission 6969
+# Prediction precision decrease by slave submission 784
+# Bad prediction by slave submission 1409
+# No predictions by master/slave 59178 41771
+# Check :  79726 79726
 
 # slave_submission = "results/submission_2016-06-09-14-40__10_2500_200_8.csv"
 
@@ -56,6 +66,17 @@ identity_threshold = 0.1
 
 
 def main(master_submission, slave_submission, threshold, identity_threshold):
+
+    def print_result():
+        print 'Number of identical predictions', n_same_predictions
+        print 'New prediction from slave submission', n_new_predictions
+        print 'Lost prediction by slave submission', n_lost_predictions
+        print 'Prediction precision improvement by slave submission', n_predictions_improve
+        print 'Prediction precision decrease by slave submission', n_predictions_decrease
+        print 'Bad prediction by slave submission', n_bad_predictions
+        print 'No predictions by master/slave', n_no_predictions_master, n_no_predictions_slave
+        print "Check : ", slave_df.shape[0], n_same_predictions + n_new_predictions + n_predictions_improve + n_predictions_decrease + n_bad_predictions + n_no_predictions_slave
+
 
     ###########################################################################
     # Check for existing files
@@ -109,9 +130,8 @@ def main(master_submission, slave_submission, threshold, identity_threshold):
 
     if diff_df.empty:
         print "Submissions are identical"
-        print 'No predictions by master/slave', n_no_predictions_master, n_no_predictions_slave
-
         n_same_predictions = master_df.shape[0] - n_no_predictions_master
+        print_result()
         return n_same_predictions, n_new_predictions, \
                n_lost_predictions, n_predictions_improve, \
                n_predictions_decrease, n_bad_predictions, \
@@ -148,15 +168,7 @@ def main(master_submission, slave_submission, threshold, identity_threshold):
         elif 0 < s < t:
             n_predictions_decrease += 1
 
-    print 'Number of identical predictions', n_same_predictions
-    print 'New prediction from slave submission', n_new_predictions
-    print 'Lost prediction by slave submission', n_lost_predictions
-    print 'Prediction precision improvement by slave submission', n_predictions_improve
-    print 'Prediction precision decrease by slave submission', n_predictions_decrease
-    print 'Bad prediction by slave submission', n_bad_predictions
-    print 'No predictions by master/slave', n_no_predictions_master, n_no_predictions_slave
-
-    print "Check : ", slave_df.shape[0], n_same_predictions + n_new_predictions + n_predictions_improve + n_predictions_decrease + n_bad_predictions + n_no_predictions_slave
+    print_result()
 
     return n_same_predictions, n_new_predictions, \
            n_lost_predictions, n_predictions_improve, \
