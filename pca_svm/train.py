@@ -20,7 +20,7 @@ from sklearn.svm import SVC
 from sklearn.externals import joblib
 
 # Project
-from common import get_data_parallel, get_data
+from common import get_data_parallel
 
 
 logger = logging.getLogger()
@@ -32,13 +32,13 @@ logger.setLevel(logging.INFO)
 
 classes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 # number of images per class
-n_samples_per_class = 175
+n_samples_per_class = 250
 
 # Image resize factor
 resize_factor = 8
 
 # Number of components for PCA
-n_components = 150
+n_components = 200
 
 
 ###########################################################################
@@ -105,25 +105,9 @@ pca = RandomizedPCA(n_components=n_components, whiten=True)
 start = time()
 
 logging.info("-- setup train data")
-
-# t0 = time()
-# X_train_, width_, height_ = get_data(files_train, resize_factor)
-# print "get_data : ", time() - t0
-# t0 = time()
 X_train, width, height = get_data_parallel(files_train, resize_factor)
-# print "get_data_parallel : ", time() - t0
-# assert width == width_ and height == height_ and (X_train == X_train_).all(), "Data is not identical"
-
 logging.info("-- setup test data")
-
-# t0 = time()
-# X_test_, width_, height_ = get_data(files_test, resize_factor)
-# print "get_data : ", time() - t0
-# t0 = time()
-X_test, width__, height__ = get_data_parallel(files_test, resize_factor)
-# print "get_data_parallel : ", time() - t0
-# assert width__ == width_ and height__ == height_ and (X_test == X_test).all(), "Data is not identical"
-
+X_test, _, _ = get_data_parallel(files_test, resize_factor)
 
 # Compute PCA
 logging.info("-- PCA fit")
