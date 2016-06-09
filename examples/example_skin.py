@@ -44,7 +44,8 @@ skin_range_min = np.array([6, 10, 35], dtype=np.uint8)
 skin_range_max = np.array([45, 255, 255], dtype=np.uint8)
 
 
-train_files_path = "../input/train/c3"
+train_files_path = "../input/train/c0"
+# train_files_path = "../input/test"
 skin_sieve_min_size = 10
 skin_kernel_size = 7
 
@@ -53,7 +54,7 @@ wheel_canny_ratio = 2.2
 # wheel_canny_size = 3
 
 
-counter = 2
+counter = 15
 for f in os.listdir(train_files_path):
 
     image = cv2.imread(os.path.join(train_files_path, f))
@@ -69,7 +70,7 @@ for f in os.listdir(train_files_path):
     skin_like_mask = cv2.inRange(image_hsv, skin_range_min, skin_range_max)
     # Filter the skin mask :
     skin_mask = sieve(skin_like_mask, skin_sieve_min_size)
-    kernel = np.ones((skin_kernel_size,skin_kernel_size), dtype=np.int8)
+    kernel = np.ones((skin_kernel_size, skin_kernel_size), dtype=np.int8)
     skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_CLOSE, kernel)
     # Apply skin mask
     skin_segm_rgb = cv2.bitwise_and(image, image, mask=skin_mask)
