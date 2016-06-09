@@ -5,6 +5,7 @@
 # Python
 import os
 import logging
+from glob import glob
 from time import time
 from datetime import datetime
 
@@ -15,7 +16,7 @@ import numpy as np
 from sklearn.externals import joblib
 
 # Project
-from common import get_data
+from common import get_data_parallel, get_data
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -25,13 +26,13 @@ logger.setLevel(logging.INFO)
 ###########################################################################
 classes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 # number of images per class
-n_samples_per_class = -1
+n_samples_per_class = 500
 
 # Image resize factor
 resize_factor = 8
 
 # Number of components for PCA
-n_components = 100
+n_components = 150
 
 ###########################################################################
 # Check for existing result
@@ -90,12 +91,7 @@ logging.info("- Predict and write submission file")
 
 
 start = time()
-files = []
-path = "../input/test"
-for f in os.listdir(path):
-    files.append(os.path.join(path, f))
-
-files = np.array(files)
+files = np.array(glob("../input/test/*.jpg"))
 # Process files by blocks of 500 files
 block_size = 500
 index = 0
@@ -130,7 +126,15 @@ while index < len(files):
     index += block_size
 
     logging.info("-- setup test data. block index = {}".format(index))
-    X_test, width, height = get_data(block_files, resize_factor)
+
+    # t0 = time()
+    # X_test_, width_, height_ = get_data(block_files, resize_factor)
+    # print "get_data : ", time() - t0
+    # t0 = time()
+    X_test, width, height = get_data_parallel(block_files, resize_factor)
+    # print "get_data_parallel : ", time() - t0
+    # assert width == width_ and height == height_ and (X_test == X_test_).all(), "Data is not identical"
+
     logging.info("-- project the data on the eigenposes orthogonal basis")
     X_test_pca = pca.transform(X_test)
     logging.info("-- predict classes")

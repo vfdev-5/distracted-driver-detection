@@ -3,7 +3,7 @@
 ## Custom ignores
 input/test
 input/train
-
+pca_svm/results/*.csv
 
 ## Linux backup files
 *~

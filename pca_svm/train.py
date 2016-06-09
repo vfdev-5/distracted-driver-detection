@@ -5,10 +5,9 @@
 # Python
 import os
 import logging
+import random
 from time import time
-
-# Numpy
-import numpy as np
+from glob import glob
 
 # Sklearn
 from sklearn.cross_validation import train_test_split
@@ -21,7 +20,7 @@ from sklearn.svm import SVC
 from sklearn.externals import joblib
 
 # Project
-from common import get_data
+from common import get_data_parallel, get_data
 
 
 logger = logging.getLogger()
@@ -33,17 +32,19 @@ logger.setLevel(logging.INFO)
 
 classes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 # number of images per class
-n_samples_per_class = -1
+n_samples_per_class = 175
 
 # Image resize factor
 resize_factor = 8
 
 # Number of components for PCA
-n_components = 100
+n_components = 150
 
 
 ###########################################################################
 # Check for existing result
+###########################################################################
+
 model_filename = 'svc_' + str(len(classes)) + '_' \
                  + str(len(classes) * n_samples_per_class) + '_' \
                  + str(n_components) + '_' \
@@ -55,7 +56,6 @@ pca_filename = 'pca_' + str(len(classes)) + '_' \
                  + str(n_components) + '_' \
                  + str(resize_factor) \
                  + '.pkl'
-
 
 if os.path.exists(os.path.join('models', model_filename)):
     logging.error("Model is already trained for these parameters")
@@ -70,21 +70,19 @@ if os.path.exists(os.path.join('models', pca_filename)):
 logging.info("- Prepare training data")
 ###########################################################################
 
-targets = []
+targets = ()
 files = []
 
 for cls in classes:
-    path = os.path.join("../input/train", 'c' + str(cls))
-    counter = n_samples_per_class
-    for f in os.listdir(path):
-        files.append(os.path.join(path, f))
-        targets.append(cls)
-        counter -= 1
-        if counter == 0:
-            break
+    path = os.path.join("../input/train", 'c' + str(cls), "*.jpg")
+    # choose randomly 'n_samples_per_class' files
+    fls = random.sample(glob(path), n_samples_per_class)
+    targets += (cls,) * len(fls)
+    files.extend(fls)
 
 n_classes = len(classes)
 logging.info("data : classes={}, samples per class={}".format(classes, n_samples_per_class))
+
 
 ###########################################################################
 logging.info("- Split into a training set and a test set")
@@ -97,6 +95,7 @@ files_train, files_test, target_train, target_test = train_test_split(
 logging.info("Train files : {}".format(len(files_train)))
 logging.info("Test files : {}".format(len(files_test)))
 
+
 ###########################################################################
 logging.info(" - Compute a PCA on the dataset : unsupervised feature extraction /dimensionality reduction")
 ###########################################################################
@@ -106,9 +105,25 @@ pca = RandomizedPCA(n_components=n_components, whiten=True)
 start = time()
 
 logging.info("-- setup train data")
-X_train, width, height = get_data(files_train, resize_factor)
+
+# t0 = time()
+# X_train_, width_, height_ = get_data(files_train, resize_factor)
+# print "get_data : ", time() - t0
+# t0 = time()
+X_train, width, height = get_data_parallel(files_train, resize_factor)
+# print "get_data_parallel : ", time() - t0
+# assert width == width_ and height == height_ and (X_train == X_train_).all(), "Data is not identical"
+
 logging.info("-- setup test data")
-X_test, _, _ = get_data(files_test, resize_factor)
+
+# t0 = time()
+# X_test_, width_, height_ = get_data(files_test, resize_factor)
+# print "get_data : ", time() - t0
+# t0 = time()
+X_test, width__, height__ = get_data_parallel(files_test, resize_factor)
+# print "get_data_parallel : ", time() - t0
+# assert width__ == width_ and height__ == height_ and (X_test == X_test).all(), "Data is not identical"
+
 
 # Compute PCA
 logging.info("-- PCA fit")
@@ -128,6 +143,7 @@ X_train_pca = pca.transform(X_train)
 X_test_pca = pca.transform(X_test)
 
 logging.info("Elapsed seconds : {}".format(time() - start))
+
 
 ###############################################################################
 logging.info("Train a SVM classification model")
