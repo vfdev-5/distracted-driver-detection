@@ -17,7 +17,7 @@ import pandas as pd
 ###########################################################################
 
 # master_submission = "results/submission_2016-06-08-18-01__10_1500_100_8.csv"
-master_submission = "results/submission_2016-06-08-18-01__10_1500_100_8.csv"
+master_submission = "results/submission_2016-06-09-14-11__10_1750_150_8.csv"
 
 # test identical
 # slave_submission = "results/submission_2016-06-08-18-01__10_1500_100_8.csv"
@@ -41,9 +41,26 @@ slave_submission = "results/submission_2016-06-09-09-40__10_-10_100_8.csv"
 # No predictions by master/slave 59178 41771
 # Check :  79726 79726
 
+# Number of identical predictions 7664
+# New prediction from slave submission 20399
+# Lost prediction by slave submission 7694
+# Prediction precision improvement by slave submission 7029
+# Prediction precision decrease by slave submission 1496
+# Bad prediction by slave submission 1367
+# No predictions by master/slave 54476 41771
+# Check :  79726 79726
+
 # slave_submission = "results/submission_2016-06-09-14-40__10_2500_200_8.csv"
 
 # slave_submission = "results/submission_2016-06-08-18-01__10_1500_100_8.csv"
+# Number of identical predictions 6588
+# New prediction from slave submission 8454
+# Lost prediction by slave submission 13156
+# Prediction precision improvement by slave submission 1584
+# Prediction precision decrease by slave submission 3127
+# Bad prediction by slave submission 795
+# No predictions by master/slave 54476 59178
+# Check :  79726 79726
 
 threshold = 0.6
 identity_threshold = 0.1
