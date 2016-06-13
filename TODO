@@ -1,0 +1,25 @@
+# TODO
+
+### try a CNN
+- Try Faster R-CNN
+    * ~~Install from https://github.com/rbgirshick/py-faster-rcnn~~
+    * Download pretrained models
+
+- Read the threory :
+    * http://arxiv.org/pdf/1506.01497v3.pdf
+    * http://cs231n.github.io/neural-networks-1/ etc
+
+
+### Pose estimation
+
+- Assert that there is a package that can give quantative pose positions
+
+
+
+### Test XGBoost library
+
+- Need good features anyway
+
+
+
+
