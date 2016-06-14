@@ -1,0 +1,62 @@
+
+============================================================================
+c-example-facedetect (use cascade + nested cascade on images/video)
+---------------------------------------------------------------------------
+
+From ~/Documents/Build_opencv-2.4.13/bin$ 
+
+# Nothing
+./c-example-facedetect --cascade=/usr/local/share/OpenCV/haarcascades/haarcascade_profileface.xml --nested-cascade=/usr/local/share/OpenCV/haarcascades/haarcascade_mcs_rightear.xml ~/Documents/kaggle/distracted-driver-detection/input/train/c0/img_12378.jpg
+
+# Nothing
+./c-example-facedetect --cascade=/usr/local/share/OpenCV/haarcascades/haarcascade_profileface.xml --scale=4.0 ~/Documents/kaggle/distracted-driver-detection/input/train/c0/img_12375.jpg 
+
+# Nothing
+./c-example-facedetect --cascade=/usr/local/share/OpenCV/haarcascades/haarcascade_mcs_upperbody.xml --scale=1.3 ~/Documents/kaggle/distracted-driver-detection/input/train/c0/img_12375.jpg
+
+
+# Detects frontal face
+./c-example-facedetect --cascade=/usr/local/share/OpenCV/lbpcascades/lbpcascade_frontalface.xml --scale=1.4 ~/Documents/kaggle/distracted-driver-detection/input/train/c9/img_14866.jpg
+
+============================================================================
+c-example-latentsvmdetect
+---------------------------------------------------------------------------
+
+./c-example-latentsvmdetect ~/Documents/kaggle/distracted-driver-detection/input/train/c9/img_15772.jpg ~/Documents/opencv_extra-2.4.13/testdata/cv/latentsvmdetector/models_VOC2007/person.xml
+
+./c-example-latentsvmdetect ~/Documents/kaggle/distracted-driver-detection/input/train/c0/img_12470.jpg ~/Documents/opencv_extra-2.4.13/testdata/cv/latentsvmdetector/models_VOC2007/person.xml
+
+./c-example-latentsvmdetect ~/Documents/opencv_extra-2.4.13/testdata/cv/latentsvmdetector/cat.png ~/Documents/opencv_extra-2.4.13/testdata/cv/latentsvmdetector/models_VOC2007/cat.xml
+
+============================================================================
+c-example-smiledetect
+---------------------------------------------------------------------------
+
+============================================================================
+cpp-example-bagofwords_classification
+---------------------------------------------------------------------------
+
+
+============================================================================
+cpp-example-facerec_demo
+
+============================================================================
+cpp-example-facial_features
+
+============================================================================
+cpp-example-fitellipse
+
+============================================================================
+cpp-example-latentsvm_multidetect
+
+============================================================================
+cpp-example-pca
+
+============================================================================
+cpp-example-peopledetect
+
+============================================================================
+
+ocl-example-facedetect
+ocl-example-hog
+
