@@ -3,7 +3,7 @@
 ### try a CNN
 - Try Faster R-CNN
     * Install from https://github.com/rbgirshick/py-faster-rcnn
-        - cd caffe-fast-rcnn; sudo pip install -r requirements.txt
+        - cd caffe-fast-rcnn/python; sudo pip install -r requirements.txt
     * See CPU_ONLY=1 : https://github.com/rbgirshick/py-faster-rcnn/issues/123
     * Download pretrained models
     * cd tools; ./demo.py --cpu
