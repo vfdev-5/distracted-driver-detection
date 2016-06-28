@@ -12,6 +12,13 @@
     * http://arxiv.org/pdf/1506.01497v3.pdf
     * http://cs231n.github.io/neural-networks-1/ etc
 
+- Train Faster R-CNN on 10 classes
+    * Understand the format of the training data needed by py-faster-rcnn
+    * Detect on train image the human -> define a ROI with a person
+      - Use pretrained vgg16 model to detect a person on the image (heavy)
+      - 
+    * Train RCNN using defined ROI 
+
 
 ### Pose estimation
 
