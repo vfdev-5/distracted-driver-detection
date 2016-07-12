@@ -4,6 +4,8 @@
 input/test
 input/train
 pca_svm/results/*.csv
+*.lmdb
+*.binproto
 
 ## Linux backup files
 *~
