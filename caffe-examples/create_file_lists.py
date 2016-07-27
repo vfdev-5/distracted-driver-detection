@@ -7,7 +7,7 @@ import argparse
 from common.datasets import trainval_files, get_drivers_list, write_datasets_lists
 
 RESOURCES = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources'))
-
+assert os.path.exists(RESOURCES), "Resources path is not found"
 
 if __name__ == '__main__':
 

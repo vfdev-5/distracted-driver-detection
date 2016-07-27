@@ -1,130 +1,92 @@
 # Python
-from os import path
-from os.path import join
-import shutil
+import os
 import argparse
-from glob import glob
-import random
-
-# Numpy
-import numpy as np
-
-# Matplotlib
-import matplotlib.pyplot as plt
-
-# Sklearn
-from sklearn.cross_validation import train_test_split
-
-# Opencv
-import cv2
-
-# Lmdb and Caffe
-import lmdb
-import caffe
-
 
 # Project
-from common.datasets import trainval_files
+from common.datasets import trainval_files, test_files, get_drivers_list, write_images_lmdb
 
 
-INPUT_DATA_PATH = path.abspath(path.join(path.dirname(__file__), "..", "input"))
-assert path.exists(INPUT_DATA_PATH), "INPUT_DATA_PATH is not properly configured"
-
-
-def read_image(filename, size):
-    assert path.exists(filename), "Image path '%s' from file list is not found" % filename
-    img = cv2.imread(filename)
-    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    if size is not None:
-        rgb = cv2.resize(rgb, (size[0], size[1]))
-    return rgb
-
-
-def create_lmdb(lmdb_filepath, input_files, labels, size):
-    """
-    Write images from input_files and labels in lmdb_filepath
-    """
-    if path.exists(lmdb_filepath):
-        shutil.rmtree(lmdb_filepath)
-    # maximum size of the whole DB as 10 times bigger then size of images
-    estimate_map_size = (3 * size[0] * size[1]) * len(input_files) * 10
-    env = lmdb.open(lmdb_filepath, estimate_map_size)
-    with env.begin(write=True) as txn:
-        counter = 0
-        if labels is None:
-            labels = [None]*len(input_files)
-        for f, cls in zip(input_files, labels):
-            # Read data from file :
-            data = read_image(f, size)
-
-            datum = caffe.proto.caffe_pb2.Datum()
-            datum.channels = data.shape[2]
-            datum.height = data.shape[0]
-            datum.width = data.shape[1]
-            datum.data = data.tobytes()
-
-            if cls is not None:
-                datum.label = int(cls)
-            str_id = '{:08}'.format(counter)
-            txn.put(str_id.encode('ascii'), datum.SerializeToString())
-            counter += 1
-    env.close()
+RESOURCES = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources'))
+assert os.path.exists(RESOURCES), "Resources path is not found"
 
 
 def create_trainval_lmdb(args):
 
+    classes = range(0, args.nb_classes if 0 < args.nb_classes < 11 else 10)
+    all_drivers = get_drivers_list()
+    assert args.nb_drivers + args.nb_val_drivers <= len(all_drivers) and \
+           args.nb_drivers > 0 and args.nb_val_drivers >= 0, \
+        "nb-drivers + nb-val-drivers should or equal less than %i" % len(all_drivers)
+
+    drivers = all_drivers[:args.nb_drivers if 0 < args.nb_drivers <= len(all_drivers) else len(all_drivers)]
+
+    if args.nb_val_drivers > 0:
+        val_drivers = all_drivers[args.nb_drivers:args.nb_drivers+args.nb_val_drivers]
+    else:
+        val_drivers = []
+
+    nb_train = int(len(classes) * len(drivers) * args.nb_samples * (1.0 - args.validation_size) + 0.5)
+    nb_val = int(len(classes) * (len(drivers) + len(val_drivers) if val_drivers is not None else 0) * args.nb_samples * args.validation_size + 0.5)
+    print "Estimate number of train images : ", nb_train
+    print "Estimate number of validation images : ", nb_val
 
     sets = trainval_files(classes, drivers, args.nb_samples, args.validation_size, val_drivers)
 
+    output_train_filename = os.path.join(RESOURCES, 'train__%i_%i_%i_%i_%i'
+                                         % (args.nb_drivers,
+                                            args.nb_classes,
+                                            args.nb_samples,
+                                            int(100*(1.0-args.validation_size)),
+                                            len(val_drivers)))
+    if args.size is not None:
+        output_train_filename += '__%i_%i' % (args.size[0], args.size[1])
+    output_train_filename += '.lmdb'
+
+    output_val_filename = os.path.join(RESOURCES, 'val__%i_%i_%i_%i_%i'
+                                       % (args.nb_drivers,
+                                          args.nb_classes,
+                                          args.nb_samples,
+                                          int(100*args.validation_size),
+                                          len(val_drivers)))
+    if args.size is not None:
+        output_val_filename += '__%i_%i' % (args.size[0], args.size[1])
+    output_val_filename += '.lmdb'
 
     # Write train lmdb
-    filename = 'train_%i' % count if count > 0 else 'train_all'
-    if size is not None:
-        filename += '__%i_%i' % (size[0], size[1])
-    filename += '.lmdb'
-    filepath = join('resources', filename)
-    create_lmdb(filepath, train_files, train_labels, size)
+    write_images_lmdb(output_train_filename, sets[0], sets[1], args.size)
 
     # Write val lmdb
-    filename = 'val_%i' % count if count > 0 else 'val_all'
-    if size is not None:
-        filename += '__%i_%i' % (size[0], size[1])
-    filename += '.lmdb'
-    filepath = join('resources', filename)
-    create_lmdb(filepath, val_files, val_labels, size)
+    write_images_lmdb(output_val_filename, sets[2], sets[3], args.size)
 
 
 def create_test_lmdb(args):
 
-    files = glob(path.join(INPUT_DATA_PATH, 'test', '*.jpg'))
-    if count > 0:
-        if randomize:
-            files = random.sample(files, count)
-        else:
-            files = files[0:count]
+    files = test_files(args.nb_samples)
 
     # Write train lmdb
-    filename = 'test_%i' % count if count > 0 else 'test_all'
-    if size is not None:
-        filename += '__%i_%i' % (size[0], size[1])
-    filename += '.lmdb'
-    filepath = join('resources', filename)
-    create_lmdb(filepath, files, None, size)
+    output_filename = os.path.join(RESOURCES, 'test__%i'
+                                              % (args.nb_samples))
+    if args.size is not None:
+        output_filename += '__%i_%i' % (args.size[0], args.size[1])
+    output_filename += '.lmdb'
+    write_images_lmdb(output_filename, files, None, args.size)
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('type', type=str, choices=('trainval', 'test'),
+                        help='Type of the file list')
     parser.add_argument('--nb-samples', type=int, default=10,
-                        help='Number of samples per class and per driver')
-    parser.add_argument('--validation-size', type=float, default=0.4,
-                        help="Validation size between 0 to 1")
+                        help='Number of samples per class and per driver (type=trainval). Number of files to fetch (type=test)')
+    parser.add_argument('--validation-size', type=float, default=0.25,
+                        help="Validation size between 0 to 1 (type=trainval)")
     parser.add_argument('--nb-classes', type=int, default=10,
-                        help="Number of classes between 1 to 10. All classes : -1")
+                        help="Number of classes between 1 to 10 (type=trainval). All classes : -1")
     parser.add_argument('--nb-drivers', type=int, default=20,
-                        help="Number of drivers in training/validation sets, between 1 to 26. All drivers : -1")
+                        help="Number of drivers in training/validation sets, between 1 to 26 (type=trainval). All drivers : -1")
     parser.add_argument('--nb-val-drivers', type=int, default=6,
-                        help="Number of drivers in validation only sets. nb-drivers + nb-val-drivers should less or equal than 26.")
+                        help="Number of drivers in validation only sets (type=trainval). nb-drivers + nb-val-drivers should less or equal than 26.")
     parser.add_argument('--size', type=int, nargs=2, default=None,
                         help="Output image size : width height")
 
@@ -135,6 +97,8 @@ if __name__ == '__main__':
         create_trainval_lmdb(args)
     elif args.type == 'test':
         create_test_lmdb(args)
+    else:
+        raise Exception("Type '%s' is not recognized" % args.type)
 
     print "Output file is written in 'resources' folder"
 

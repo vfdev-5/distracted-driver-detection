@@ -3,9 +3,9 @@
 #
 
 # Python
+import os
 import multiprocessing
 import itertools
-
 
 # numpy
 import numpy as np
@@ -19,6 +19,15 @@ def preprocess_image(in_image, w, h):
     gray = cv2.equalizeHist(gray)
     gray = cv2.resize(gray, (w, h))
     return gray.reshape(w*h)
+
+
+def read_image(filename, size):
+    assert os.path.exists(filename), "Image path '%s' from file list is not found" % filename
+    img = cv2.imread(filename)
+    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    if size is not None:
+        rgb = cv2.resize(rgb, (size[0], size[1]))
+    return rgb
 
 
 def get_data(files, resize_factor):

@@ -2,7 +2,11 @@
 # Python
 import os
 import random
+from glob import glob
 from itertools import groupby
+
+# Opencv
+import cv2
 
 # Pandas
 import pandas as pd
@@ -10,14 +14,23 @@ import pandas as pd
 # Sklearn
 from sklearn.cross_validation import train_test_split
 
+# Lmdb and Caffe
+import lmdb
+import caffe
+
+# Project
+from common.preprocessing import read_image
+
 
 INPUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),'../input'))
 
 DRIVER_IMGS_LIST_CSV = os.path.join(INPUT_PATH, 'driver_imgs_list.csv')
 TRAIN_IMGS_PATH = os.path.abspath(os.path.join(INPUT_PATH, 'train'))
+TEST_IMGS_PATH = os.path.abspath(os.path.join(INPUT_PATH, 'test'))
 
 assert os.path.exists(DRIVER_IMGS_LIST_CSV), "Please configure the path to 'driver_imgs_list.csv' file. Current path is %s" % DRIVER_IMGS_LIST_CSV
 assert os.path.exists(TRAIN_IMGS_PATH), "Please configure the path to train images folder"
+assert os.path.exists(TEST_IMGS_PATH), "Please configure the path to test images folder"
 
 
 def get_drivers_list():
@@ -28,15 +41,28 @@ def get_drivers_list():
     return drivers_list_df.subject.unique()
 
 
+def test_files(count):
+    """
+    :param count: number of files. If count == -1, take all files
+    :return: test image files
+    """
+    files = glob(os.path.join(TEST_IMGS_PATH, '*.jpg'))
+    if count > 0:
+        files = random.sample(files, count)
+    else:
+        files = files[0:count]
+    return files
+
+
 def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=None, return_drivers=False):
     """
-    :param classes is a list of classes to select images, e.g (0, 1, 3)
-    :param drivers is a list of drivers to select images, e.g. (p041, p026)
-    :param nb_samples is a number of samples per class and per driver
-    :param validation_size is a size of validation set over size of training set
-    :param val_drivers is a list of drivers only for the validation set. Values can be different from drivers. Can be None if same drivers for training and validation sets
-    :param return_drivers is a flag to return two additional lists with drivers for training and validation sets
-    :returns training image files, training targets, validation image files, validation targets, training drivers, validation drivers
+    :param classes: is a list of classes to select images, e.g (0, 1, 3)
+    :param drivers: is a list of drivers to select images, e.g. (p041, p026)
+    :param nb_samples: is a number of samples per class and per driver
+    :param validation_size: is a size of validation set over size of training set
+    :param val_drivers: is a list of drivers only for the validation set. Values can be different from drivers. Can be None if same drivers for training and validation sets
+    :param return_drivers: is a flag to return two additional lists with drivers for training and validation sets
+    :return: training image files, training targets, validation image files, validation targets, training drivers, validation drivers
     """
 
     drivers_list_df = pd.read_csv(DRIVER_IMGS_LIST_CSV, ",")
@@ -57,7 +83,6 @@ def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=No
             targets.extend([cls]*len(img_files))
 
         return files, targets
-
 
     def _get_files_targets_drivers(drivers):
         _files = []
@@ -122,6 +147,43 @@ def write_datasets_lists(sets, output_train_filename, output_test_filename):
 
     write_images_list(sets[0], sets[1], output_train_filename)
     write_images_list(sets[2], sets[3], output_test_filename)
+
+
+def write_images_lmdb(lmdb_filepath, input_files, labels=None, size=None):
+    """
+    Write images from input_files and labels in lmdb_filepath
+    labels can be None
+    size can be None or [width, height] to resize
+    """
+    assert not os.path.exists(lmdb_filepath), "Output lmdb file '%s' should not exist" % lmdb_filepath
+
+    # maximum size of the whole DB as 10 times bigger then size of images
+    if size is not None:
+        estimate_map_size = (3 * size[0] * size[1]) * len(input_files) * 10
+    else:
+        estimate_map_size = (3 * 620 * 480) * len(input_files) * 10
+
+    env = lmdb.open(lmdb_filepath, estimate_map_size)
+    with env.begin(write=True) as txn:
+        counter = 0
+        if labels is None:
+            labels = [None]*len(input_files)
+        for f, cls in zip(input_files, labels):
+            # Read data from file :
+            data = read_image(f, size)
+
+            datum = caffe.proto.caffe_pb2.Datum()
+            datum.channels = data.shape[2]
+            datum.height = data.shape[0]
+            datum.width = data.shape[1]
+            datum.data = data.tobytes()
+
+            if cls is not None:
+                datum.label = int(cls)
+            str_id = '{:08}'.format(counter)
+            txn.put(str_id.encode('ascii'), datum.SerializeToString())
+            counter += 1
+    env.close()
 
 
 if __name__ == "__main__":
