@@ -1,0 +1,24 @@
+#### SOLVER CONFIGURATION
+# see http://www.wisdom.weizmann.ac.il/~vision/courses/2016_1/dnn/files/ta_lecture.pptx
+solver_mode: CPU
+#
+net: "/home/osboxes/Documents/state-farm-distracted-driver-detection/caffe-examples/resources/small_example-net_lmdb.prototxt" # Net path
+#
+test_iter: 1000 # test_iter specifies how many forward passes the test should carry out.
+test_interval: 1000 # Carry out testing every X training iterations.
+#
+type: "SGD"
+#
+base_lr: 0.01
+momentum: 0.9
+weight_decay: 0.0005
+lr_policy: "step"
+gamma: 0.1
+stepsize: 100000
+#
+display: 20 # Display every X iterations
+#
+max_iter: 50000
+snapshot: 50000
+snapshot_prefix: "/home/osboxes/Documents/state-farm-distracted-driver-detection/caffe-examples/resources/caffe-small_example-net"
+#

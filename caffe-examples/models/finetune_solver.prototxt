@@ -1,0 +1,58 @@
+#### SOLVER CONFIGURATION
+# see http://www.wisdom.weizmann.ac.il/~vision/courses/2016_1/dnn/files/ta_lecture.pptx
+
+## Device type : GPU / CPU
+#solver_mode: GPU
+#iter_size: 100
+solver_mode: CPU
+
+
+
+## Net definition :
+# Caffe net
+#net: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/models/train_val_ddd_finetunning.prototxt" # Net path
+
+# Googlenet 
+#net: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/models/train_val_googlenet_ddd_finetunning.prototxt" # Net path
+
+# ResNet-152 
+net: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/models/train_val_resnet-152_ddd_finetunning.prototxt" # Net path
+
+
+
+#
+test_iter: 100 # test_iter specifies how many forward passes the test should carry out.
+test_interval: 1000 # Carry out testing every X training iterations.
+
+## Solver type :
+# type: "SGD"
+type: "Nesterov"
+
+
+## ref caffe params
+base_lr: 0.001
+momentum: 0.9
+weight_decay: 0.0005
+lr_policy: "step"
+gamma: 0.1
+stepsize: 20000
+
+## googlenet params
+#average_loss: 40
+#base_lr: 0.01
+#momentum: 0.9
+#lr_policy: "poly"
+#power: 0.5
+#weight_decay: 0.0003
+
+
+
+#
+display: 1 # Display every X iterations
+#
+max_iter: 100000
+snapshot: 10000
+snapshot_prefix: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/train_val_resnet-152_ddd_finetunning-net"
+#
+
+#
