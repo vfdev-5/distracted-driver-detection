@@ -2,11 +2,7 @@
 # Python
 import os
 import random
-<<<<<<< HEAD
-from glob import glob
-=======
 from itertools import groupby
->>>>>>> test
 
 # Pandas
 import pandas as pd
@@ -15,20 +11,12 @@ import pandas as pd
 from sklearn.cross_validation import train_test_split
 
 
-<<<<<<< HEAD
-INPUT_PATH = '../input'
-DRIVER_IMGS_LIST_CSV = os.path.join(INPUT_PATH, 'driver_imgs_list.csv')
-TRAIN_IMGS_PATH = os.path.abspath(os.path.join(INPUT_PATH, 'train'))
-
-assert os.path.exists(DRIVER_IMGS_LIST_CSV), "Please configure the path to 'driver_imgs_list.csv' file"
-=======
 INPUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),'../input'))
 
 DRIVER_IMGS_LIST_CSV = os.path.join(INPUT_PATH, 'driver_imgs_list.csv')
 TRAIN_IMGS_PATH = os.path.abspath(os.path.join(INPUT_PATH, 'train'))
 
 assert os.path.exists(DRIVER_IMGS_LIST_CSV), "Please configure the path to 'driver_imgs_list.csv' file. Current path is %s" % DRIVER_IMGS_LIST_CSV
->>>>>>> test
 assert os.path.exists(TRAIN_IMGS_PATH), "Please configure the path to train images folder"
 
 
@@ -40,23 +28,15 @@ def get_drivers_list():
     return drivers_list_df.subject.unique()
 
 
-<<<<<<< HEAD
-def trainval_files(classes, drivers, nb_samples, validation_size):
-=======
 def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=None, return_drivers=False):
->>>>>>> test
     """
     :param classes is a list of classes to select images, e.g (0, 1, 3)
     :param drivers is a list of drivers to select images, e.g. (p041, p026)
     :param nb_samples is a number of samples per class and per driver
     :param validation_size is a size of validation set over size of training set
-<<<<<<< HEAD
-    :returns training image files, training targets, validation image files, validation targets
-=======
     :param val_drivers is a list of drivers only for the validation set. Values can be different from drivers. Can be None if same drivers for training and validation sets
     :param return_drivers is a flag to return two additional lists with drivers for training and validation sets
     :returns training image files, training targets, validation image files, validation targets, training drivers, validation drivers
->>>>>>> test
     """
 
     drivers_list_df = pd.read_csv(DRIVER_IMGS_LIST_CSV, ",")
@@ -66,11 +46,7 @@ def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=No
         targets = []
         imgs_classes_df = drivers_list_df[
             drivers_list_df.subject == driver
-<<<<<<< HEAD
         ]
-=======
-            ]
->>>>>>> test
         for cls in classes:
             imgs_df = imgs_classes_df[imgs_classes_df.classname == 'c%i' % cls]
             imgs = imgs_df.img.unique()
@@ -82,23 +58,7 @@ def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=No
 
         return files, targets
 
-<<<<<<< HEAD
-    train_files = []
-    train_targets = []
-    validation_files = []
-    validation_targets = []
 
-
-    for driver in drivers:
-        files, targets = _get_images_and_classes(driver, classes, nb_samples)
-        t_files, v_files, t_targets, v_targets = train_test_split(files, targets, test_size=validation_size, random_state=42)
-        train_files.extend(t_files)
-        train_targets.extend(t_targets)
-        validation_files.extend(v_files)
-        validation_targets.extend(v_targets)
-
-    return train_files, train_targets, validation_files, validation_targets
-=======
     def _get_files_targets_drivers(drivers):
         _files = []
         _targets = []
@@ -132,7 +92,6 @@ def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=No
         return train_files, train_targets, validation_files, validation_targets
     else:
         return train_files, train_targets, validation_files, validation_targets, train_drivers, validation_drivers
->>>>>>> test
 
 
 def write_images_list(files, targets, output_filename):
@@ -169,17 +128,6 @@ if __name__ == "__main__":
 
     all_drivers = get_drivers_list()
 
-<<<<<<< HEAD
-    classes = (0, 1, 2)
-    nb_class_driver_samples = 3
-    validation_size = 0.4
-
-    sets = trainval_files(classes, all_drivers, nb_class_driver_samples, validation_size)
-    print len(sets[0]), sets[0]
-    print len(sets[1]), sets[1]
-    print len(sets[2]), sets[2]
-    print len(sets[3]), sets[3]
-=======
     drivers = all_drivers[:4]
     #val_drivers = all_drivers[5:7]
     val_drivers = []
@@ -208,4 +156,3 @@ if __name__ == "__main__":
     sets[3].sort()
     for key, group in groupby(sets[3]):
         print "label", key, ":", len(list(group))
->>>>>>> test

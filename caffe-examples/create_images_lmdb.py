@@ -23,6 +23,10 @@ import lmdb
 import caffe
 
 
+# Project
+from common.datasets import trainval_files
+
+
 INPUT_DATA_PATH = path.abspath(path.join(path.dirname(__file__), "..", "input"))
 assert path.exists(INPUT_DATA_PATH), "INPUT_DATA_PATH is not properly configured"
 
@@ -67,24 +71,11 @@ def create_lmdb(lmdb_filepath, input_files, labels, size):
     env.close()
 
 
-def create_trainval_lmdb(count, randomize, size, valsize):
+def create_trainval_lmdb(args):
 
-    all_files = []
-    all_labels = []
-    for cls in xrange(10):
-        files = glob(join(INPUT_DATA_PATH, 'train', 'c%i' % cls, '*.jpg'))
-        if count > 0:
-            nb_per_class = max(int(count / 10), 1)
-            if randomize:
-                files = random.sample(files, nb_per_class)
-            else:
-                files = files[0:nb_per_class]
-        all_files.extend(files)
-        all_labels.extend([cls]*len(files))
 
-    train_files, val_files, train_labels, val_labels = train_test_split(
-        all_files, all_labels, test_size=valsize, random_state=42
-    )
+    sets = trainval_files(classes, drivers, args.nb_samples, args.validation_size, val_drivers)
+
 
     # Write train lmdb
     filename = 'train_%i' % count if count > 0 else 'train_all'
@@ -103,7 +94,7 @@ def create_trainval_lmdb(count, randomize, size, valsize):
     create_lmdb(filepath, val_files, val_labels, size)
 
 
-def create_test_lmdb(count, randomize, size):
+def create_test_lmdb(args):
 
     files = glob(path.join(INPUT_DATA_PATH, 'test', '*.jpg'))
     if count > 0:
@@ -124,24 +115,26 @@ def create_test_lmdb(count, randomize, size):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('type', type=str, choices=('trainval', 'test'),
-                        help='Type of the file list')
-    parser.add_argument('--count', type=int, default=-1,
-                        help='Take \'count\' images. If \'count\' = -1 take all images')
-    parser.add_argument('--randomize', action='store_true',
-                        help="Choose randomly images if \'count\' > 0")
+    parser.add_argument('--nb-samples', type=int, default=10,
+                        help='Number of samples per class and per driver')
+    parser.add_argument('--validation-size', type=float, default=0.4,
+                        help="Validation size between 0 to 1")
+    parser.add_argument('--nb-classes', type=int, default=10,
+                        help="Number of classes between 1 to 10. All classes : -1")
+    parser.add_argument('--nb-drivers', type=int, default=20,
+                        help="Number of drivers in training/validation sets, between 1 to 26. All drivers : -1")
+    parser.add_argument('--nb-val-drivers', type=int, default=6,
+                        help="Number of drivers in validation only sets. nb-drivers + nb-val-drivers should less or equal than 26.")
     parser.add_argument('--size', type=int, nargs=2, default=None,
                         help="Output image size : width height")
-    parser.add_argument('--val-size', type=float, default=0.25,
-                        help="Validation data percentage. Default : 0.25")
 
     args = parser.parse_args()
     print args
 
     if args.type == 'trainval':
-        create_trainval_lmdb(args.count, args.randomize, args.size, args.val_size)
+        create_trainval_lmdb(args)
     elif args.type == 'test':
-        create_test_lmdb(args.count, args.randomize, args.size)
+        create_test_lmdb(args)
 
     print "Output file is written in 'resources' folder"
 
