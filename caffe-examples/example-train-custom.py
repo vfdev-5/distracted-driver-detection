@@ -1,29 +1,51 @@
 #!/bin/python2
 
 #
-# Simple logistic regression example using Caffe
+# Visualize model training
 #
 
 # Python
 import os
 
-# Numpy
+# Numpy & Matplotlib
 import numpy as np
+import matplotlib.pyplot as plt
+
+# Opencv
+import cv2
 
 
-RESOURCES = '/home/osboxes/Documents/state-farm-distracted-driver-detection/caffe-examples/resources'
+RESOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
+MODELS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+SOLVER_PATH = os.path.join(MODELS, 'train_solver.prototxt')
 
-assert os.path.exists(os.path.join(RESOURCES, 'train_list_100.txt')), "Train list file is not found"
-assert os.path.exists(os.path.join(RESOURCES, 'train_list_50.txt')), "Test list file is not found"
+assert os.path.exists(RESOURCES) and os.path.exists(MODELS) and os.path.exists(SOLVER_PATH), "Bad configuration"
 
 #
 ### Setup Caffe
 #
-import os
-import caffe
 
 
-solver = caffe.get_solver(os.path.join(RESOURCES, 'solver.prototxt'))
+#
+# Check mean image
+#
+def check_mean_image():
+    filename = os.path.join(RESOURCES, 'mean_image_train_list_72.txt.binproto')
+    data = open(filename, 'rb').read()
+    blob = caffe.proto.caffe_pb2.BlobProto()
+    blob.ParseFromString(data)
+    arr = np.array(caffe.io.blobproto_to_array(blob))
+    img = arr[0, :, :, :]
+    img = img.T.astype(np.uint8)
+    plt.title('Mean img')
+    plt.imshow(img)
+    plt.show()
+
+# check_mean_image()
+
+
+caffe.set_mode_cpu()
+solver = caffe.get_solver(SOLVER_PATH)
 
 
 niter = 250
@@ -32,9 +54,28 @@ test_interval = niter / 10
 train_loss = np.zeros(niter)
 test_acc = np.zeros(int(np.ceil(niter / test_interval)))
 
+
 # the main solver loop
 for it in range(niter):
-    solver.step(1)  # SGD by Caffe
+
+    print "-- Iteration", it
+
+    solver.step(1)
+
+    # Show input data :
+    print solver.net.blobs['data'].data.shape
+
+    for i in range(solver.net.blobs['data'].data.shape[0]):
+        img = solver.net.blobs['data'].data[i, :, :, :].T.astype(np.uint8)
+        print img.dtype, img.shape, img.min(), img.max()
+        plt.title('data img %i' % i)
+        plt.imshow(img)
+        plt.show()
+
+
+
+    break
+
 
     # store the train loss
     train_loss[it] = solver.net.blobs['loss'].data
@@ -51,6 +92,7 @@ for it in range(niter):
                            solver.test_nets[0].blobs['label'].data)
         test_acc[it // test_interval] = correct / 1e4
 
+    break
 
 # print solver.net.forward()  # train net
 # Train the net

@@ -1,7 +1,7 @@
 #!/bin/python2
 
 #
-# Simple logistic regression example using Caffe
+#
 #
 
 # Python

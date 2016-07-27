@@ -6,6 +6,10 @@ input/train
 pca_svm/results/*.csv
 *.lmdb
 *.binproto
+*.caffemodel
+*.solverstate
+caffe-examples/resources/*.txt
+
 
 ## Linux backup files
 *~

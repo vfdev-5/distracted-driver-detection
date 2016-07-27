@@ -10,13 +10,15 @@ import numpy as np
 # Opencv
 import cv2
 
-# Caffe
+# lmdb
 import lmdb
+
+# Caffe
 import caffe
 
 
 def compute_from_filelist(filelist, shape):
-    mean_image = np.zeros(shape)
+    mean_image = np.zeros(shape, dtype=np.float32)
     count = 0
     with open(filelist, 'r') as reader:
         for line in iter(lambda: reader.readline(), ''):
