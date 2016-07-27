@@ -1,59 +1,34 @@
 #!/bin/python2
 
-from os import path
-from glob import glob
-import random
+import os
 import argparse
 
-INPUT_DATA_PATH = path.abspath(path.join(path.dirname(__file__), "..", "input"))
-assert path.exists(INPUT_DATA_PATH), "INPUT_DATA_PATH is not properly configured"
-
-
-def create_train_list(count, randomize):
-    filename = 'train_list_%i.txt' % count if count > 0 else 'train_list_all.txt'
-    with open(path.join('resources', filename), 'w') as writer:
-        for cls in xrange(10):
-            files = glob(path.join(INPUT_DATA_PATH, 'train', 'c%i' % cls, '*.jpg'))
-            if count > 0:
-                nb_per_class = max(int(count / 10), 1)
-                if randomize:
-                    files = random.sample(files, nb_per_class)
-                else:
-                    files = files[0:nb_per_class]
-            for f in files:
-                writer.write('%s %i\n' % (f, cls))
-
-
-def create_test_list(count, randomize):
-    filename = 'test_list_%i.txt' % count if count > 0 else 'test_list_all.txt'
-    with open(path.join('resources', filename), 'w') as writer:
-        files = glob(path.join(INPUT_DATA_PATH, 'test', '*.jpg'))
-        if count > 0:
-            if randomize:
-                files = random.sample(files, count)
-            else:
-                files = files[0:count]
-        for f in files:
-            writer.write('%s\n' % f)
+# Project
+from common.datasets import trainval_files, get_drivers_list, write_datasets_lists
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('type', type=str, choices=('train', 'test'),
-                        help='Type of the file list')
-    parser.add_argument('--count', type=int, default=-1,
-                        help='Take \'count\' images. If \'count\' = -1 take all images')
-    parser.add_argument('--randomize', action='store_true',
-                        help="Choose randomly images if \'count\' > 0")
+    parser.add_argument('--nb-samples', type=int, default=10,
+                        help='Number of samples per class and per driver')
+    parser.add_argument('--validation-size', type=float, default=0.4,
+                        help="Validation size between 0 to 1")
 
     args = parser.parse_args()
     print args
 
-    if args.type == 'train':
-        create_train_list(args.count, args.randomize)
-    elif args.type == 'test':
-        create_test_list(args.count, args.randomize)
+    classes = range(0, 10)
+    drivers = get_drivers_list()
+
+    nb_train = int(len(classes) * len(drivers) * args.nb_samples * (1.0 - args.validation_size))
+    nb_test = int(len(classes) * len(drivers) * args.nb_samples * args.validation_size)
+
+    output_train_list_filename = os.path.join('resources', 'train_list_%i.txt' % nb_train)
+    output_test_list_filename = os.path.join('resources', 'test_list_%i.txt' % nb_test)
+
+    sets = trainval_files(classes, drivers, args.nb_samples, args.validation_size)
+    write_datasets_lists(sets, output_train_list_filename, output_test_list_filename)
 
     print "Output file is written in 'resources' folder"
 

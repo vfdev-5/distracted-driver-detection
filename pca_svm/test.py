@@ -3,11 +3,11 @@
 #
 
 # Python
-import os
 import logging
+import os
+from datetime import datetime
 from glob import glob
 from time import time
-from datetime import datetime
 
 # Numpy
 import numpy as np
@@ -16,7 +16,7 @@ import numpy as np
 from sklearn.externals import joblib
 
 # Project
-from common import get_data_parallel, get_data
+from common.preprocessing import get_data_parallel
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

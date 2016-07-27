@@ -23,7 +23,7 @@ import os
 import caffe
 
 
-solver = caffe.get_solver(os.path.join(RESOURCES, 'solver_small-conf.prototxt'))
+solver = caffe.get_solver(os.path.join(RESOURCES, 'test-solver.prototxt'))
 
 print solver.net.forward()  # train net
 

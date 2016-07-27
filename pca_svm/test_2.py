@@ -3,10 +3,10 @@
 #
 
 # Python
-import os
 import logging
-from time import time
+import os
 from datetime import datetime
+from time import time
 
 # Numpy
 import numpy as np
@@ -16,7 +16,7 @@ from sklearn.externals import joblib
 from sklearn.decomposition import RandomizedPCA
 
 # Project
-from common import get_data_parallel, get_data
+from common.preprocessing import get_data_parallel
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
