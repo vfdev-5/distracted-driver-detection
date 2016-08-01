@@ -48,9 +48,9 @@ mean_image = mean_image[:, :227, :227]
 # transformer.set_mean('data', mean_image)
 # net.blobs['data'].reshape(1, 3, 227, 227)
 
-val_data_path = os.path.join(RESOURCES, "train__d0_12__c10_n10__s256_256.lmdb")
+# val_data_path = os.path.join(RESOURCES, "train__d0_12__c10_n10__s256_256.lmdb")
 # val_data_path = os.path.join(RESOURCES, "train__d0_3__c10_n10__s256_256.lmdb")
-# val_data_path = os.path.join(RESOURCES, "val__d13_25__c10_n10__s256_256.lmdb")
+val_data_path = os.path.join(RESOURCES, "val__d13_25__c10_n10__s256_256.lmdb")
 # val_data_path = os.path.join(RESOURCES, "test__100__256_256.lmdb")
 
 
@@ -93,9 +93,7 @@ def show_classification():
         net.blobs['data'].data[...] = transformed_image
         output = net.forward()
         output_prob = output['prob'] # the output probability vector for the first image in the batch
-        output_acc = output['accuracy']  # the output probability vector for the first image in the batch
         print 'predicted class is:', output_prob.argmax(), output_prob
-        print 'Accuracy : ', output_acc
         print 'Truth label : ', label
 
         # plt.subplot(121)

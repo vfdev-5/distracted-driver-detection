@@ -39,7 +39,10 @@ def predict_and_write(width, height, output_filename, prediction_func, file_read
     Method to make predictions on test data and write submission file
     :param width: desirable image width of the test data
     :param height: desirable image height of the test data 
-    :param prediction_func: function that is called on data_batches to make predictions. Function receives as arguments a data_batch (ndarray) and should return ... 
+    :param prediction_func: function that is called on data_batches to make predictions.
+            Function receives one argument: data_batch (ndarray) with a shape (number of files in batch, number of channels, height, width)
+            should return
+
     :param file_reader_func: function that is called to open (and resize) a batch of files. If None a default function is used. Function receives 3 args: list of files, width, height
     The function should return an instance of ndarray with a shape (number of files in batch, number of channels, height, width)
     """
@@ -80,13 +83,14 @@ def predict_and_write(width, height, output_filename, prediction_func, file_read
         logging.info("-- predict classes")
 
         target_proba_pred = prediction_func(X_test)
-        assert isinstance(target_proba_pred, np.ndarray), "target_proba_pred should be a ndarray"
+        assert isinstance(target_proba_pred, np.ndarray) and \
+               target_proba_pred.shape[0] == X_test.shape[0], \
+            "target_proba_pred should be a ndarray with the shape (block_size, nb_classes)"
 
         data_array = target_proba_pred.tolist()
         for l, f in zip(data_array, block_files):
             l.insert(0, os.path.basename(f))
         _write_predictions_block(output_filename, data_array)
-        raise Exception()
 
     logging.info("Elapsed seconds : {}".format(time() - start))
 

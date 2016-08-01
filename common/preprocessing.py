@@ -74,9 +74,9 @@ def get_raw_data(files, width, height):
     
     # Do not use multiprocessing on MacOSX
     if "Darwin" not in platform.system():
-        return _get_raw_data_parallel(files, widht, height)
+        return _get_raw_data_parallel(files, width, height)
     else:
-        return _get_raw_data(files, widht, height)
+        return _get_raw_data(files, width, height)
 
 
 def get_data2(files, width, height):

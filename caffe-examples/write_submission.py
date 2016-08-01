@@ -38,25 +38,19 @@ from common.results import predict_and_write
 
 
 def predict(data_batch):
+    """
+    :param data_batch: shape=(number of files in batch, number of channels, height, width)
+    :return:
+    """
+    net.blobs['data'].reshape(*data_batch.shape)
 
-    print data_batch.shape
+    mean_image_batch = mean_image[None, ...]
+    mean_image_batch = np.repeat(mean_image_batch, data_batch.shape[0], axis=0)
+    data_batch = data_batch - mean_image_batch
+    net.blobs['data'].data[...] = data_batch
 
-    data = data_batch.reshape(
-        data_batch.shape[0],
-        227,
-        227,
-        3
-    )
-    target_proba_pred = []
-    for img in data:
-
-        transformed_image = img.T - mean_image
-        net.blobs['data'].data[...] = transformed_image
-        output = net.forward()
-        output_prob = output['prob'] # the output probability vector for the first image in the batch
-
-        target_proba_pred.extend(output_prob)
-
+    output = net.forward()
+    target_proba_pred = np.array(output['prob']) # the output probability vector for the first image in the batch
     return target_proba_pred
 
 
@@ -76,7 +70,7 @@ if __name__ == "__main__":
 
     output_filename = os.path.join(RESULTS, output_filename)
 
-    predict_and_write(227, 227, predict, output_filename)
+    predict_and_write(227, 227, output_filename, predict)
 
 
 
