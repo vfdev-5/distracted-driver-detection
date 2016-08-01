@@ -12,7 +12,7 @@ from time import time
 import numpy as np
 
 # Project
-from common.preprocessing import get_data_parallel2, get_data2
+from common.preprocessing import get_data_parallel2, get_raw_data
 
 INPUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../input'))
 CLASSES = range(10)
@@ -34,8 +34,15 @@ def _write_predictions_block(filename, data_array):
             writer.write(line)
 
 
-def predict_and_write(width, height, prediction_func, output_filename):
-
+def predict_and_write(width, height, output_filename, prediction_func, file_reader_func=None):
+    """
+    Method to make predictions on test data and write submission file
+    :param width: desirable image width of the test data
+    :param height: desirable image height of the test data 
+    :param prediction_func: function that is called on data_batches to make predictions. Function receives as arguments a data_batch (ndarray) and should return ... 
+    :param file_reader_func: function that is called to open (and resize) a batch of files. If None a default function is used. Function receives 3 args: list of files, width, height
+    The function should return an instance of ndarray with a shape (number of files in batch, number of channels, height, width)
+    """
     if os.path.exists(output_filename):
         logging.error("Submission file is already existing")
         return
@@ -57,6 +64,8 @@ def predict_and_write(width, height, prediction_func, output_filename):
 
     logging.info("-- Total number of files : {}".format(len(files)))
 
+    _get_data = file_reader_func if file_reader_func is not None else get_raw_data
+
     while index < len(files):
         if index+block_size >= len(files):
             block_size = len(files) - index
@@ -64,13 +73,14 @@ def predict_and_write(width, height, prediction_func, output_filename):
         index += block_size
 
         logging.info("-- setup test data. block index = {}".format(index))
-
-        X_test = get_data2(block_files, width, height)
+        
+        X_test = _get_data(block_files, width, height)
+        assert isinstance(X_test, np.ndarray) and len(X_test.shape) == 4, "Bad output from the function '_get_data'"
 
         logging.info("-- predict classes")
 
         target_proba_pred = prediction_func(X_test)
-        # assert isinstance(target_proba_pred, np.ndarray), "target_proba_pred should be a ndarray"
+        assert isinstance(target_proba_pred, np.ndarray), "target_proba_pred should be a ndarray"
 
         data_array = target_proba_pred.tolist()
         for l, f in zip(data_array, block_files):
