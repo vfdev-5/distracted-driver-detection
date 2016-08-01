@@ -2,7 +2,7 @@ name: "DDD_ResNet-152"
 # Finetunning of ResNet-152 model
 layer {
   name: "data"
-  type: "Data"
+  type: "ImageData"
   top: "data"
   top: "label"
   include {
@@ -13,15 +13,16 @@ layer {
     #crop_size: 224
     mean_file: "/Users/vfomin/Documents/ML/caffe-master_42cd785/data/resnet/ResNet_mean.binaryproto"
   }
-  data_param {
-    source: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/train__20_10_10_75_6__224_224.lmdb"
+  image_data_param {
+    source: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/train_list_1752.txt"
     batch_size: 1#50
-    backend: LMDB
+    new_height: 224
+    new_width: 224
   }
 }
 layer {
   name: "data"
-  type: "Data"
+  type: "ImageData"
   top: "data"
   top: "label"
   include {
@@ -32,10 +33,11 @@ layer {
     #crop_size: 224
     mean_file: "/Users/vfomin/Documents/ML/caffe-master_42cd785/data/resnet/ResNet_mean.binaryproto"
   }
-  data_param {
-    source: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/val__20_10_10_75_6__224_224.lmdb"
+  image_data_param {
+    source: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/test_list_842.txt"
     batch_size: 1#50
-    backend: LMDB
+    new_height: 224
+    new_width: 224
   }
 }
 

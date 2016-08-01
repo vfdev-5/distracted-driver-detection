@@ -3,7 +3,7 @@ import os
 import argparse
 
 # Project
-from common.datasets import trainval_files, test_files, get_drivers_list, write_images_lmdb
+from common.datasets import trainval_files2, test_files, get_drivers_list, write_images_lmdb
 
 
 RESOURCES = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources'))
@@ -14,42 +14,44 @@ def create_trainval_lmdb(args):
 
     classes = range(0, args.nb_classes if 0 < args.nb_classes < 11 else 10)
     all_drivers = get_drivers_list()
-    assert args.nb_drivers + args.nb_val_drivers <= len(all_drivers) and \
-           args.nb_drivers > 0 and args.nb_val_drivers >= 0, \
-        "nb-drivers + nb-val-drivers should or equal less than %i" % len(all_drivers)
+    ll = len(all_drivers)
 
-    drivers = all_drivers[:args.nb_drivers if 0 < args.nb_drivers <= len(all_drivers) else len(all_drivers)]
+    assert 0 <= args.train_drivers[0] < args.train_drivers[1]+1 <= ll, \
+        "Train drivers indices should be between 0 and %i" % (ll-1)
 
-    if args.nb_val_drivers > 0:
-        val_drivers = all_drivers[args.nb_drivers:args.nb_drivers+args.nb_val_drivers]
+    assert 0 <= args.val_drivers[0] < args.val_drivers[1]+1 <= ll, \
+        "Validation drivers indices should be between 0 and %i" % (ll-1)
+
+    train_drivers = all_drivers[args.train_drivers[0]:args.train_drivers[1]+1]
+
+    if args.val_drivers[0] < args.val_drivers[1]:
+        val_drivers = all_drivers[args.val_drivers[0]:args.val_drivers[1]+1]
     else:
         val_drivers = []
 
-    nb_train = int(len(classes) * len(drivers) * args.nb_samples * (1.0 - args.validation_size) + 0.5)
-    nb_val = int(len(classes) * (len(drivers) + len(val_drivers) if val_drivers is not None else 0) * args.nb_samples * args.validation_size + 0.5)
+    nb_train = int(len(classes) * len(train_drivers) * args.nb_samples)
+    nb_val = int(len(classes) * len(val_drivers) * args.nb_samples)
     print "Estimate number of train images : ", nb_train
     print "Estimate number of validation images : ", nb_val
 
-    sets = trainval_files(classes, drivers, args.nb_samples, args.validation_size, val_drivers)
+    sets = trainval_files2(classes, train_drivers, val_drivers, args.nb_samples)
 
-    output_train_filename = os.path.join(RESOURCES, 'train__%i_%i_%i_%i_%i'
-                                         % (args.nb_drivers,
+    output_train_filename = os.path.join(RESOURCES, 'train__d%i_%i__c%i_n%i'
+                                         % (args.train_drivers[0],
+                                            args.train_drivers[1],
                                             args.nb_classes,
-                                            args.nb_samples,
-                                            int(100*(1.0-args.validation_size)),
-                                            len(val_drivers)))
+                                            args.nb_samples))
     if args.size is not None:
-        output_train_filename += '__%i_%i' % (args.size[0], args.size[1])
+        output_train_filename += '__s%i_%i' % (args.size[0], args.size[1])
     output_train_filename += '.lmdb'
 
-    output_val_filename = os.path.join(RESOURCES, 'val__%i_%i_%i_%i_%i'
-                                       % (args.nb_drivers,
+    output_val_filename = os.path.join(RESOURCES, 'val__d%i_%i__c%i_n%i'
+                                       % (args.val_drivers[0],
+                                          args.val_drivers[1],
                                           args.nb_classes,
-                                          args.nb_samples,
-                                          int(100*args.validation_size),
-                                          len(val_drivers)))
+                                          args.nb_samples))
     if args.size is not None:
-        output_val_filename += '__%i_%i' % (args.size[0], args.size[1])
+        output_val_filename += '__s%i_%i' % (args.size[0], args.size[1])
     output_val_filename += '.lmdb'
 
     # Write train lmdb
@@ -64,8 +66,8 @@ def create_test_lmdb(args):
     files = test_files(args.nb_samples)
 
     # Write train lmdb
-    output_filename = os.path.join(RESOURCES, 'test__%i'
-                                              % (args.nb_samples))
+    output_filename = 'test__%i' % (args.nb_samples) if args.nb_samples > 0 else 'test__all'
+    output_filename = os.path.join(RESOURCES, output_filename)
     if args.size is not None:
         output_filename += '__%i_%i' % (args.size[0], args.size[1])
     output_filename += '.lmdb'
@@ -77,16 +79,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('type', type=str, choices=('trainval', 'test'),
                         help='Type of the file list')
+    parser.add_argument('--train-drivers', type=int, nargs=2, default=[0, 12],
+                        help="Drivers for the training set only. Two indices between 0 to 25 (type=trainval).")
+    parser.add_argument('--val-drivers', type=int, nargs=2, default=[13, 25],
+                    help="Drivers for the validation set only. Two indices between 0 to 25 (type=trainval).")
     parser.add_argument('--nb-samples', type=int, default=10,
                         help='Number of samples per class and per driver (type=trainval). Number of files to fetch (type=test)')
-    parser.add_argument('--validation-size', type=float, default=0.25,
-                        help="Validation size between 0 to 1 (type=trainval)")
     parser.add_argument('--nb-classes', type=int, default=10,
                         help="Number of classes between 1 to 10 (type=trainval). All classes : -1")
-    parser.add_argument('--nb-drivers', type=int, default=20,
-                        help="Number of drivers in training/validation sets, between 1 to 26 (type=trainval). All drivers : -1")
-    parser.add_argument('--nb-val-drivers', type=int, default=6,
-                        help="Number of drivers in validation only sets (type=trainval). nb-drivers + nb-val-drivers should less or equal than 26.")
     parser.add_argument('--size', type=int, nargs=2, default=None,
                         help="Output image size : width height")
 

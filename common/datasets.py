@@ -22,8 +22,7 @@ import caffe
 from common.preprocessing import read_image
 
 
-INPUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),'../input'))
-
+INPUT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../input'))
 DRIVER_IMGS_LIST_CSV = os.path.join(INPUT_PATH, 'driver_imgs_list.csv')
 TRAIN_IMGS_PATH = os.path.abspath(os.path.join(INPUT_PATH, 'train'))
 TEST_IMGS_PATH = os.path.abspath(os.path.join(INPUT_PATH, 'test'))
@@ -31,6 +30,8 @@ TEST_IMGS_PATH = os.path.abspath(os.path.join(INPUT_PATH, 'test'))
 assert os.path.exists(DRIVER_IMGS_LIST_CSV), "Please configure the path to 'driver_imgs_list.csv' file. Current path is %s" % DRIVER_IMGS_LIST_CSV
 assert os.path.exists(TRAIN_IMGS_PATH), "Please configure the path to train images folder"
 assert os.path.exists(TEST_IMGS_PATH), "Please configure the path to test images folder"
+
+DRIVERS_LIST_DF = pd.read_csv(DRIVER_IMGS_LIST_CSV, ",")
 
 
 def get_drivers_list():
@@ -49,9 +50,59 @@ def test_files(count):
     files = glob(os.path.join(TEST_IMGS_PATH, '*.jpg'))
     if count > 0:
         files = random.sample(files, count)
-    else:
-        files = files[0:count]
     return files
+
+
+
+def _get_images_and_classes(driver, classes, nb_samples):
+    files = []
+    targets = []
+    imgs_classes_df = DRIVERS_LIST_DF[
+        DRIVERS_LIST_DF.subject == driver
+        ]
+    for cls in classes:
+        imgs_df = imgs_classes_df[imgs_classes_df.classname == 'c%i' % cls]
+        imgs = imgs_df.img.unique()
+        if nb_samples < len(imgs):
+            imgs = random.sample(imgs, nb_samples)
+        img_files = [os.path.join(TRAIN_IMGS_PATH, 'c%i' % cls, img) for img in imgs]
+        files.extend(img_files)
+        targets.extend([cls]*len(img_files))
+
+    return files, targets
+
+
+def _get_files_targets_drivers(_drivers, _classes, _nb_samples):
+    _files = []
+    _targets = []
+    _list_drivers = []
+
+    for driver in _drivers:
+        f, t = _get_images_and_classes(driver, _classes, _nb_samples)
+        _files.extend(f)
+        _targets.extend(t)
+        _list_drivers.extend([driver]*len(f))
+    return _files, _targets, _list_drivers
+
+
+def trainval_files2(classes, train_drivers, val_drivers, nb_samples, return_drivers=False):
+    """
+    :param classes: is a list of classes to select images, e.g (0, 1, 3)
+    :param train_drivers: is a list of drivers to select images, e.g. (p041, p026)
+    :param val_drivers: is a list of drivers only for the validation set. Values can be different from drivers.
+        Can be None if same drivers for training and validation sets
+    :param nb_samples: is a number of samples per class and per driver
+    :param return_drivers: is a flag to return two additional lists with drivers for training and validation sets
+    :return: training image files, training targets, validation image files, validation targets, training drivers, validation drivers
+    """
+
+    train_files, train_targets, list_train_drivers = _get_files_targets_drivers(train_drivers, classes, nb_samples)
+    validation_files, validation_targets, list_val_drivers = _get_files_targets_drivers(val_drivers, classes, nb_samples)
+
+    if not return_drivers:
+        return train_files, train_targets, validation_files, validation_targets
+    else:
+        return train_files, train_targets, validation_files, validation_targets, list_train_drivers, list_val_drivers
 
 
 def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=None, return_drivers=False):
@@ -65,38 +116,7 @@ def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=No
     :return: training image files, training targets, validation image files, validation targets, training drivers, validation drivers
     """
 
-    drivers_list_df = pd.read_csv(DRIVER_IMGS_LIST_CSV, ",")
-
-    def _get_images_and_classes(driver, classes, nb_samples):
-        files = []
-        targets = []
-        imgs_classes_df = drivers_list_df[
-            drivers_list_df.subject == driver
-        ]
-        for cls in classes:
-            imgs_df = imgs_classes_df[imgs_classes_df.classname == 'c%i' % cls]
-            imgs = imgs_df.img.unique()
-            if nb_samples < len(imgs):
-                imgs = random.sample(imgs, nb_samples)
-            img_files = [os.path.join(TRAIN_IMGS_PATH, 'c%i' % cls, img) for img in imgs]
-            files.extend(img_files)
-            targets.extend([cls]*len(img_files))
-
-        return files, targets
-
-    def _get_files_targets_drivers(drivers):
-        _files = []
-        _targets = []
-        _list_drivers = []
-
-        for driver in drivers:
-            f, t = _get_images_and_classes(driver, classes, nb_samples)
-            _files.extend(f)
-            _targets.extend(t)
-            _list_drivers.extend([driver]*len(f))
-        return _files, _targets, _list_drivers
-
-    files, targets, list_drivers = _get_files_targets_drivers(drivers)
+    files, targets, list_drivers = _get_files_targets_drivers(drivers, classes, nb_samples)
 
     train_files, validation_files, \
     train_targets, validation_targets, \
@@ -104,7 +124,7 @@ def trainval_files(classes, drivers, nb_samples, validation_size, val_drivers=No
         train_test_split(files, targets, list_drivers, test_size=validation_size, random_state=42)
 
     if val_drivers is not None:
-        files, targets, list_drivers = _get_files_targets_drivers(val_drivers)
+        files, targets, list_drivers = _get_files_targets_drivers(val_drivers, classes, nb_samples)
         _, v_f, \
         _, v_t, \
         _, v_d = \
@@ -171,12 +191,8 @@ def write_images_lmdb(lmdb_filepath, input_files, labels=None, size=None):
         for f, cls in zip(input_files, labels):
             # Read data from file :
             data = read_image(f, size)
-
-            datum = caffe.proto.caffe_pb2.Datum()
-            datum.channels = data.shape[2]
-            datum.height = data.shape[0]
-            datum.width = data.shape[1]
-            datum.data = data.tobytes()
+            # Reshape data (H, W, K) -> (K, H, W)
+            datum = caffe.io.array_to_datum(data.T, cls)
 
             if cls is not None:
                 datum.label = int(cls)

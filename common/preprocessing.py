@@ -30,6 +30,26 @@ def read_image(filename, size):
     return rgb
 
 
+# def get_raw_data(files, width, height):
+#     out = None
+#     for i, f in enumerate(files):
+#         data = read_image(f, (width, height))
+#         if out is None:
+#             out = np.empty((len(files), ))
+#
+#         out[i, :, :, :] = data[:, :, :]
+#     return out
+
+
+def get_data2(files, width, height):
+    out = np.empty((len(files), width * height))
+    for i, f in enumerate(files):
+        image = cv2.imread(f)
+        data = preprocess_image(image, width, height)
+        out[i, :] = data[:]
+    return out
+
+
 def get_data(files, resize_factor):
     out = None
     w = None
@@ -52,6 +72,15 @@ def _process_file(args):
     gray = cv2.equalizeHist(gray)
     gray = cv2.resize(gray, size)
     return gray.reshape(size[0]*size[1])
+
+
+def get_data_parallel2(files, width, height):
+    # define output image shape from the first image:
+    n_workers = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(processes=n_workers)
+    out = pool.map(_process_file, itertools.izip(files, itertools.repeat((width, height))))
+    pool.close()
+    return np.array(out)
 
 
 def get_data_parallel(files, resize_factor):

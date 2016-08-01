@@ -1,15 +1,25 @@
 #### SOLVER CONFIGURATION
 # see http://www.wisdom.weizmann.ac.il/~vision/courses/2016_1/dnn/files/ta_lecture.pptx
 
-## Device type : GPU / CPU 
-solver_mode: CPU
+## Device type : GPU / CPU
+solver_mode: GPU
+iter_size: 100
 
 ## Net definition :
-net: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/models/train_val_ddd.prototxt" # Net path
+#net: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/models/train_val_ddd.prototxt" # Net path
+net: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/models/train_val_caffenet-ddd.prototxt"
+
+# ResNet-50
+#net: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/models/train_val_resnet-50_ddd.prototxt"
+
+# TEMP ResNet-50
+#net: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/models/tmp-train_val_resnet-50_ddd.prototxt"
+
+
 
 #
-test_iter: 1000 # test_iter specifies how many forward passes the test should carry out.
-test_interval: 1000 # Carry out testing every X training iterations.
+test_iter: 100 # test_iter specifies how many forward passes the test should carry out.
+test_interval: 100 # Carry out testing every X training iterations.
 
 ## Solver type :
 # type: "SGD"
@@ -28,5 +38,5 @@ display: 1 # Display every X iterations
 #
 max_iter: 450000
 snapshot: 10000
-snapshot_prefix: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/train_val_ddd-net"
+snapshot_prefix: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/train_val_caffenet-ddd"
 #

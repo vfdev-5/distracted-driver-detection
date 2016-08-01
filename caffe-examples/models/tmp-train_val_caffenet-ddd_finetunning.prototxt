@@ -1,8 +1,9 @@
 name: "DistractedDriverDetectionCaffeNet"
 # Finetunning of ref caffe model
+################################################################################
 layer {
   name: "data"
-  type: "ImageData"
+  type: "Data"
   top: "data"
   top: "label"
   include {
@@ -13,16 +14,15 @@ layer {
     crop_size: 227
     mean_file: "/Users/vfomin/Documents/ML/caffe-master_42cd785/data/ilsvrc12/imagenet_mean.binaryproto"
   }
-  image_data_param {
-    source: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/train_list_1560.txt"
-    batch_size: 50
-    new_height: 256
-    new_width: 256
+  data_param {
+    source: "resources/train__2_2_10_75_0__256_256.lmdb"
+    batch_size: 1
+    backend: LMDB
   }
 }
 layer {
   name: "data"
-  type: "ImageData"
+  type: "Data"
   top: "data"
   top: "label"
   include {
@@ -33,13 +33,13 @@ layer {
     crop_size: 227
     mean_file: "/Users/vfomin/Documents/ML/caffe-master_42cd785/data/ilsvrc12/imagenet_mean.binaryproto"
   }
-  image_data_param {
-    source: "/Users/vfomin/Documents/ML/Kaggle/Distracted-Driver-Detection/caffe-examples/resources/test_list_1040.txt"
-    batch_size: 50
-    new_height: 256
-    new_width: 256
-  }
+  data_param {
+    source: "resources/val__2_2_10_25_0__256_256.lmdb"
+    batch_size: 1
+    backend: LMDB
+   }
 }
+################################################################################
 layer {
   name: "conv1"
   type: "Convolution"
@@ -344,11 +344,12 @@ layer {
     dropout_ratio: 0.5
   }
 }
+################################################################################
 layer {
-  name: "fc8_ddd"
+  name: "fc2_ddd"
   type: "InnerProduct"
   bottom: "fc7"
-  top: "fc8_ddd"
+  top: "fc2_ddd"
   # lr_mult is set to higher than for other layers, because this layer is starting from random while the others are already trained
   param {
     lr_mult: 15
@@ -359,7 +360,7 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 10
+    num_output: 2
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -370,10 +371,11 @@ layer {
     }
   }
 }
+################################################################################
 layer {
   name: "accuracy"
   type: "Accuracy"
-  bottom: "fc8_ddd"
+  bottom: "fc2_ddd"
   bottom: "label"
   top: "accuracy"
   include {
@@ -381,9 +383,18 @@ layer {
   }
 }
 layer {
+  name: "prob"
+  type: "Softmax"
+  bottom: "fc2_ddd"
+  top: "prob"
+  include {
+    phase: TEST
+  }
+}
+layer {
   name: "loss"
   type: "SoftmaxWithLoss"
-  bottom: "fc8_ddd"
+  bottom: "fc2_ddd"
   bottom: "label"
   top: "loss"
 }

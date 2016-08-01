@@ -22,7 +22,7 @@ assert os.path.exists(CAFFE_EXEC_PATH), "caffe executable tool is not found"
 # ret.wait()
 # assert ret.returncode == 0, "Caffe execution is failed"
 
-
+CWD = os.path.dirname(os.path.abspath(__file__))
 
 ### Finetune model
 program = [CAFFE_EXEC_PATH,
@@ -32,6 +32,6 @@ program = [CAFFE_EXEC_PATH,
 if len(sys.argv) > 1:
     program.extend(sys.argv[1:])
 
-ret = subprocess.Popen(program)
+ret = subprocess.Popen(program, cwd=CWD)
 ret.wait()
 assert ret.returncode == 0, "Caffe execution is failed"

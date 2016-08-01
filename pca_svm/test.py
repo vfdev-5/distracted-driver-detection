@@ -127,13 +127,7 @@ while index < len(files):
 
     logging.info("-- setup test data. block index = {}".format(index))
 
-    # t0 = time()
-    # X_test_, width_, height_ = get_data(block_files, resize_factor)
-    # print "get_data : ", time() - t0
-    # t0 = time()
     X_test, width, height = get_data_parallel(block_files, resize_factor)
-    # print "get_data_parallel : ", time() - t0
-    # assert width == width_ and height == height_ and (X_test == X_test_).all(), "Data is not identical"
 
     logging.info("-- project the data on the eigenposes orthogonal basis")
     X_test_pca = pca.transform(X_test)
